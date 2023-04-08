@@ -72,27 +72,33 @@ def new_zillow_data2017():
     Returns: DataFrame of properties queried
     '''
     sql_query = """
-                select bedroomcnt, 
-                    bathroomcnt, 
-                    calculatedfinishedsquarefeet, 
-                    taxvaluedollarcnt, 
-                    yearbuilt,
-                    taxamount, 
-                    fips, 
-                    regionidzip
-                from properties_2017
-                left join propertylandusetype 
-                    using(propertylandusetypeid)
-                left join predictions_2017
-                    using(parcelid)
-                where propertylandusedesc IN (
+                select  
+                    p7.bedroomcnt, 
+                    p7.bathroomcnt, 
+                    p7.calculatedfinishedsquarefeet,
+                    p7.yearbuilt,
+                    p7.fips, 
+                    p7.regionidzip,
+                    p6.taxvaluedollarcnt as tax_value_2016,
+                    p6.taxamount as tax_amount_2016,
+                    p7.taxvaluedollarcnt as tax_value, 
+                    p7.taxamount as tax_amount
+                from properties_2017 as p7
+                    left join properties_2016 as p6
+                        using (parcelid)
+                    left join propertylandusetype as plut
+                        on p7.propertylandusetypeid = plut.propertylandusetypeid
+                    left join predictions_2017 as pr7
+                        using(parcelid)
+                    where propertylandusedesc IN (
                         'Single Family Residential',
                         'Inferred Single Family Residential')
                     and 
                         transactiondate between 
                             date('2017-01-01') and
                             date('2017-12-31')
-                ;
+                    ;
+
                  """
     
     # Read in DataFrame from Codeup db.
@@ -153,8 +159,8 @@ def clean_zillow_data2017():
     This function retrieves the zillow data from the CodeUp MySQL database
     and applies cleaning steps to drop observations with null values,
     reset the index after dropping rows, and cast bedroomcnt, yearbuilt, 
-    and fips to integers. It returns the cleaned dataframe. Function relies
-    on other functions in the wrangle.py module.
+    and fips to integers. It adds the features tax_rate and zip_mean_tv. It returns the 
+    cleaned dataframe. Function relies on other functions in the wrangle.py module.
     '''
     df = get_zillow_data2017()
     # standardize column names to something more pythonic
@@ -162,8 +168,7 @@ def clean_zillow_data2017():
                               'bathroomcnt' : 'bathrooms', 
                               'calculatedfinishedsquarefeet' :'area', 
                               'taxvaluedollarcnt' : 'tax_value', 
-                              'yearbuilt' : 'year_built', 
-                              'taxamount' : 'tax_amount', 
+                              'yearbuilt' : 'year_built',  
                               'regionidzip' : 'zip'})
     # dropping all nulls as they are less than 1% of observations
     # and scattered across the features.
@@ -175,11 +180,15 @@ def clean_zillow_data2017():
     df.year_built = df.year_built.astype(int)
     df.fips = df.fips.astype(int)
     df.zip = df.zip.astype(int)
+    # add feature 'age'
+    df['age'] = 2017 - df.year_built
     # I want to add a feature called tax_rate that I think may be a proxy
     # for location that is more granular than FIPS. (see README.MD for a
     # summary of CA property taxes)
-    df['tax_rate'] = round((df.tax_amount / df.tax_value), 5)
-    
+    df['tax_rate_2016'] = round((df.tax_amount / df.tax_value_2016), 5)
+    # establish mean tax values for each zip code
+    zip_tv = df.tax_value_2016.groupby(df.zip).agg('mean').round().to_dict()
+    df['zip_mean_tv_2016'] = df.zip.apply(lambda x: zip_tv[x])
     return df
 
 
@@ -193,7 +202,7 @@ majority of properties instead of the outliers which, like fine art,
 have a much less regular connection to normal market parameters and 
 would likely distort the model.
 '''
-col_list = ['bedrooms', 'bathrooms', 'area', 'tax_value', 'tax_amount']
+col_list = ['bedrooms', 'bathrooms', 'area', 'tax_value', 'tax_amount', 'tax_value_2016']
 
 
 

@@ -45,14 +45,13 @@ pr6.transactiondate between
 
 select  p7.bedroomcnt, 
 		p7.bathroomcnt, 
-		p7.calculatedfinishedsquarefeet, 
-		p7.taxvaluedollarcnt, 
+		p7.calculatedfinishedsquarefeet,
 		p7.yearbuilt,
 		p7.fips, 
 		p7.regionidzip, 
-		p6.taxvaluedollarcnt as tax_value_2016, 
+		p6.taxvaluedollarcnt as tax_value_2016,
+        p6.taxamount as tax_amount_2016,
         p7.taxvaluedollarcnt as tax_value_2017, 
-        p6.taxamount as tax_2016, 
         p7.taxamount as tax_2017
 from properties_2017 as p7
 left join properties_2016 as p6
