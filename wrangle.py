@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import os
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler, QuantileTransformer
 from env import host, user, password
 
 
@@ -180,6 +181,7 @@ def clean_zillow_data2017():
     df.year_built = df.year_built.astype(int)
     df.fips = df.fips.astype(int)
     df.zip = df.zip.astype(int)
+    df.fips = df.fips.map({6111:'ventura_county', 6059:'orange_county', 6037:'la_county'})
     # add feature 'age'
     df['age'] = 2017 - df.year_built
     # I want to add a feature called tax_rate that I think may be a proxy

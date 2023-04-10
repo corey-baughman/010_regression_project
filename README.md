@@ -75,9 +75,13 @@ bathrooms -  Number of bathrooms in home including fractional bathrooms.
 
 fips - Federal Information Processing Standard code -  see https://en.wikipedia.org/wiki/FIPS_county_code for more details
 
+zip_mean_tv_2016 - mean tax value by zip code in 2016
+
 tax_amount - The total property tax assessed for that assessment year.
 
 tax_value - The total tax assessed value of the parcel in U.S Dollars. This is the target variable.
+
+tax_rate_2016 - tax value in 2016 divided by tax amount 2016
 
 year_built - The Year the principal residence was built. 
 
@@ -118,6 +122,8 @@ What are the proxies for these things in the dataset?
 
 ### 2. Data Acquisition and Preparation
 
+- Acquired data from CodeUp MySQL db. Applied cleaning functions from wrangle.py module.
+
 ### 3. Exploratory Data Analysis
  **Univariate Analysis**
  
@@ -145,15 +151,40 @@ What are the proxies for these things in the dataset?
     
 ### 4. Pre-processing
 
+    - Encoded FIPS
+    - Dropped 'zip', 'year_built', 'fips', 'tax_amount'
+    - Scaled 'bedrooms', 'bathrooms', 'area', 'tax_value_2016', 'tax_amount_2016', 'age', 'tax_rate_2016', 'zip_mean_tv_2016'
+
 ### 5. Modeling
+
+    - Used OLS, Tweedie Regressor, and Polynomial Features with different hyperparameters to find the best performing model in terms of RMSE and R2
 
 ### 6. Model Evaluation
 
+    - Created a dataframe, model_df to store and compare RMSE and R2 for various models. Confirmed performance with visualization for top performers. Tested in the wild on the Quadratic model. 
+
 ### 7. Conclusions
+
+    - Final model performance was far better than baseline, but there is still room for more feature engineering and hyperparameter tuning.
 
 ### 8. Next Steps
 
--The Tax Values of the properties seem very low to me for the counties and years under consideration. I will add this to the things to look into in the future.
+- The Tax Values of the properties seem very low to me for the counties and years under consideration. I will add this to the things to look into in the future.
 
+- Improve hyperparameter tuning.
+
+- Improve Feature Selection
 
 ### Appendix: Instructions to Reproduce Work
+
+download project repo here:
+https://github.com/corey-baughman/010_regression_project
+
+create a file called env.py in the directory where you put the files.
+The env.py file should contain this entry:
+
+host = 'data.codeup.com'
+user = 'your_username'
+password = 'your_password'
+
+replace 'your_username' and 'your_password' with your credentials to access the CodeUp mySQL server.
